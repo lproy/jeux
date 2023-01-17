@@ -1,0 +1,56 @@
+@charset "UTF-8";
+
+/* Charte typographique
+   ========================================================================== */
+@import "base/typo";
+
+
+//icone
+.fa-solid{
+  text-decoration: none;
+}
+
+
+
+//teste
+#overlay {
+  display: none; /* masque l'overlay au départ */
+  position: fixed; /* positionne l'overlay en absolu */
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0,0,0,0.8); /* couleur de fond de l'overlay */
+  z-index: 2; /* place l'overlay au-dessus de votre contenu */
+}
+
+#overlay-content {
+  position: absolute; /* positionne le contenu de l'overlay en absolu */
+  top: 50%; /* centre le contenu verticalement */
+  left: 50%; /* centre le contenu horizontalement */
+  transform: translate(-50%, -50%); /* décale le contenu pour qu'il soit centré */
+  width: 80%; /* largeur du contenu */
+  max-width: 400px; /* largeur maximale du contenu */
+  padding: 20px; /* espace autour du contenu */
+  background-color: white; /* couleur de fond du contenu */
+  border-radius: 5px; /* arrondi des bords du contenu */
+  box-shadow: 0 0 10px rgba(0,0,0,0.5); /* ombre autour du contenu */
+}
+
+#close-button {
+  position: absolute; /* positionne le bouton de fermeture en absolu */
+  top: 10px; /* place le bouton en haut à droite */
+  right: 10px;
+  padding: 10px; /* espace autour du texte du bouton */
+  background-color: transparent; /* couleur de fond transparente */
+  border: 0; /* enlève les bords du bouton */
+  font-size: 18px; /* taille de police du texte du bouton */
+  color: white; /* couleur du texte du bouton */
+  cursor: pointer; /* change le curseur en main lorsqu'on passe la souris sur le bouton */
+}
+
+#close-button:hover {
+  color: lightgray; /* change la couleur du texte lorsqu'on passe la souris sur le bouton */
+}
+
+

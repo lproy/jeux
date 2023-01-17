@@ -1,0 +1,72 @@
+/* Charte typographique
+   ========================================================================== */
+/**
+ * Typographie responsive (Mobile First)
+   ========================================================================
+ * Les valeurs de taille de police suggérées ici sont à titre indicatif.
+ * À ajuster selon la direction visuelle et le choix de polices de caractères.
+ *
+ *@author Louis-Philippe Roy 2162777@csfoy.ca
+ *
+ * TABLE DES MATIÈRES
+ * Polices
+ * Base décimale
+ * Hiérarchie responsive
+ *
+ */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
+
+h1,
+.h1 {
+    font-family: "Poppins", sans-serif;
+    color: black;
+    font-weight: 500;
+}
+
+h2,
+.h1,
+h2,
+.h2,
+h3,
+.h3 {
+    font-family: "poppins", sans-serif;
+    font-weight: 600;
+}
+
+body {
+    font-family: "poppins", sans-serif;
+}
+
+/* Base décimale */
+html {
+    font-size: 62.5%;
+}
+
+body {
+    /* 16px pour toutes les largeurs d'écran */
+    font-size: 1.6rem;
+    /* facteur multiplicateur de la taille de la police 1.375x16 = 22 */
+    line-height: 1.375;
+    @media (min-width: 630px) {
+            line-height: 1.5;
+    }
+    @media (min-width: 800px) {
+            line-height: 1.75;
+    }
+}
+
+/* Hiérarchie responsive : plus proche = plus petit  &  plus loin = plus grand */
+h1,
+.h1 { /* = 32px */
+    font-size: 3.2rem;
+}
+
+h2,
+.h2 { /* = 24px */
+    font-size: 2.4rem;
+}
+
+h3,
+.h3 { /* = 18px */
+    font-size: 2.0rem;
+}

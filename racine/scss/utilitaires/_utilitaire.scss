@@ -1,0 +1,31 @@
+/* Variables et utilitaires
+   ========================================================================== */
+
+/****** Variables (peuvent être utilisées dans tous les fichiers) *******/
+
+/** Accessibilité
+  * Pour cacher visuellement tout en gardant accessible un contenu:
+  * screen-reader-only ou visuallyhidden **/
+.screen-reader-only,
+.visuallyhidden {
+  border: 0;
+  clip: rect(0 0 0 0);
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  width: 1px;
+}
+
+.screen-reader-only.focusable:active,
+.screen-reader-only.focusable:focus,
+.visuallyhidden.focusable:active,
+.visuallyhidden.focusable:focus{
+  clip: auto;
+  height: auto;
+  margin: 0;
+  overflow: visible;
+  position: static;
+  width: auto;
+}

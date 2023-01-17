@@ -1,0 +1,8 @@
+{
+	"echouer": "Une erreur est survenue!",
+	"nom_utilisateur":"Le champ Nom d'usager est vide.",
+	"mot_de_passe":"Le champ Mot de passe est vide.",
+	"connecter":"Vous êtes présentement connecté!",
+	"courriel":"Le champ Mot de passe est vide.",
+	"erreurGeneral":"Le pseudo ou le mot de passe est incorrect, le compte n'a pas été trouvé."
+}
