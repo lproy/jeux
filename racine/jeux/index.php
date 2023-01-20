@@ -1,15 +1,16 @@
 <?php
+
+session_start();
 //Créer variable niveau
 $niveau = "../";
-
-//Inclusion de la classe Studio
-require_once($niveau . 'lib/classes/Studio.php');
 
 //Inclusion du fichier de configuration
 include($niveau . 'inc/scripts/config.inc.php');
 
+$strIdUtilisateur = $_SESSION['id_utilisateur'];
+
 // Sélection de tous les studios de cinéma dans la base de données
-$stmt = $pdoConnexion->prepare('SELECT * FROM t_studios WHERE propre = 1');
+$stmt = $pdoConnexion->prepare('SELECT * FROM t_studios WHERE id_utilisateur = '. $strIdUtilisateur);
 $stmt->execute();
 $studios = $stmt->fetchAll();
 $stmt->closeCursor();

@@ -26,7 +26,7 @@ if (isset($_GET['btn_nouveau'])) {
 $etape = isset($_GET['precedent']) ? (int) $_GET['etape'] - 1 : (int) $_GET['etape'] + 1;
 
 //Donnée étape 1
-$strTitre = isset($_GET["titre"]) ? $_GET['titre'] : "Titre du film";
+$strTitre = isset($_GET["titre"]) ? $_GET['titre'] : "";
 $strIdClassification = isset($_GET['id_classification']) ? $_GET['id_classification'] : 1;
 $strIdDuree = isset($_GET['id_duree']) ? $_GET['id_duree'] : 1;
 
@@ -70,37 +70,45 @@ switch (true) {
 //Donnée dans une requete
 //**********************************************************************************
 
-    //requete générale pour les films
-    $query = "SELECT id_film, titre, t_duree.id_duree, duree, t_classification.id_classification, type, t_classification.hexadecimal, t_couleur_background.id_couleur_background, t_couleur_background.hexadecimal, t_couleur_graphique.id_couleur_graphique, t_couleur_textes.id_couleur_textes 
-              FROM t_film 
-              INNER JOIN t_duree ON t_film.id_duree = t_duree.id_duree 
-              INNER JOIN t_classification ON t_film.id_classification = t_classification.id_classification
-              INNER JOIN t_couleur_background ON t_film.id_couleur_background = t_couleur_background.id_couleur_background
-              INNER JOIN t_couleur_graphique ON t_film.id_couleur_graphique = t_couleur_graphique.id_couleur_graphique     
-              INNER JOIN t_couleur_textes ON t_film.id_couleur_textes = t_couleur_textes.id_couleur_textes
-              WHERE id_film=:id_film";
+//    //requete générale pour les films
+//    $query = "SELECT id_film, titre, t_duree.id_duree, duree, t_classification.id_classification, type, t_classification.hexadecimal, t_couleur_background.id_couleur_background, t_couleur_background.hexadecimal, t_couleur_graphique.id_couleur_graphique, t_couleur_textes.id_couleur_textes, id_genre_film
+//              FROM t_film
+//              INNER JOIN t_duree ON t_film.id_duree = t_duree.id_duree
+//              INNER JOIN t_classification ON t_film.id_classification = t_classification.id_classification
+//              INNER JOIN t_couleur_background ON t_film.id_couleur_background = t_couleur_background.id_couleur_background
+//              INNER JOIN t_couleur_graphique ON t_film.id_couleur_graphique = t_couleur_graphique.id_couleur_graphique
+//              INNER JOIN t_couleur_textes ON t_film.id_couleur_textes = t_couleur_textes.id_couleur_textes
+//              INNER JOIN ti_film_genre ON t_film.id_film_genre = ti_film_genre.id_film_genre
+//              WHERE id_film=:id_film";
+//
+//    $pdosResultat = $pdoConnexion->prepare($query);
+//    $pdosResultat->bindParam(':id_film', $strIdFilm);
+//    $pdosResultat->execute();
+//    $strCodeErreur = $pdoConnexion->errorCode();
 
-    $pdosResultat = $pdoConnexion->prepare($query);
-    $pdosResultat->bindParam(':id_film', $strIdFilm);
-    $pdosResultat->execute();
-    $strCodeErreur = $pdoConnexion->errorCode();
-
+    //étape 1
     $arrFilm[0]['titre'] = $strTitre;
     $arrFilm[0]['id_duree'] = $strIdDuree;
     $arrFilm[0]['id_classification'] = $strIdClassification;
+    //étape 3
+    $arrFilm[0]['id_genre_principal'] = $strGenrePrincipal;
+    //étape 4
     $arrFilm[0]['id_couleur_background'] = $strIdBackground;
     $arrFilm[0]['id_couleur_graphique'] = $strIdGraphique;
     $arrFilm[0]['id_couleur_textes'] = $strIdTexte;
 
-    $pdosResultat->closeCursor();
+//    $pdosResultat->closeCursor();
 
 
 if ($etape == 1) {
-    //validation du nom
-    if ($arrFilm[0]['titre']== "" || strlen($arrFilm[0]['titre'])>20) {
-        //Si nom participant invalide...
-        $strCodeErreur="-1";
-        $arrMessagesErreur="*Veuillez rentrer un titre de film";
+    if (isset($_GET['suivant'])) {
+        //validation du nom
+        if ($arrFilm[0]['titre'] == "" || strlen($arrFilm[0]['titre']) > 20) {
+            //Si nom participant invalide...
+            $strCodeErreur = "-1";
+            $arrMessagesErreur = "*Veuillez rentrer un titre de film";
+        }
+        $etape=1;
     }
 }
 
@@ -180,9 +188,27 @@ $arrGenre= array();
 for($cptEnr=0;$ligne=$pdosResultat->fetch();$cptEnr++){
     $arrGenre[$cptEnr]['id_genre'] = $ligne['id_genre'];
     $arrGenre[$cptEnr]['nom'] = $ligne['nom'];
+    $arrGenre[$cptEnr]['typo'] = $ligne['typo'];
+
 }
 //Liberation de la 2e requête
 $pdosResultat->closeCursor();
+
+//Établissement de la chaine de requête
+$strRequeteGenreWhere =  'SELECT * FROM t_genre WHERE id_genre=:id_genre_principal';
+
+//Exécution de la 2e requête
+$pdosResultat=$pdoConnexion->prepare($strRequeteGenreWhere);
+$pdosResultat->bindValue(":id_genre_principal", $strGenrePrincipal);
+$pdosResultat->execute();
+$strCodeErreur = $pdoConnexion->errorCode();
+$arrGenreWhere = array();
+
+for($cptEnr=0;$ligne=$pdosResultat->fetch();$cptEnr++) {
+    $arrGenreWhere[0]['icone'] = $ligne['icone'];
+}
+$pdosResultat->closeCursor();
+
 
 // Sélection de tous les duree dans la base de données
 $strRequeteBackground =  'SELECT * FROM t_couleur_background';
@@ -315,6 +341,31 @@ function ecrireSelected($valeurOption, $nomSelection){
 </head>
 <body>
 <h1>Création du script</h1>
+<?php
+$menuActifInfo = "";
+$menuActifFranchise = "";
+$menuActifGenre = "";
+$menuActifDesign = "";
+if (strpos($_SERVER['PHP_SELF'], '0')) {
+    $suffixe = "Info";
+} else if (strpos($_SERVER['PHP_SELF'], '1')) {
+    $suffixe = "Franchise";
+} else if (strpos($_SERVER['PHP_SELF'], '2')){
+    $suffixe = "Genre";
+} else{
+    $suffixe = "Design";
+}
+${"menuActif" . $suffixe} = "nav__link--active";
+?>
+<nav role="navigation" class="nav nav--closed">
+    <ul class="nav__list" id="navList">
+        <li class="nav__list-item"><a class="nav__link <?php echo $menuActifInfo?>" href="session.php?etape=0">Info</a></li>
+        <li class="nav__list-item"><a class="nav__link <?php echo $menuActifFranchise?>" href="session.php?etape=1">Franchise</a></li>
+        <li class="nav__list-item"><a class="nav__link <?php echo $menuActifGenre?>" href="session.php?etape=2">Genre</a></li>
+        <li class="nav__list-item"><a class="nav__link <?php echo $menuActifDesign?>" href="session.php?etape=3">Design</a></li>
+    </ul>
+</nav>
+
 <form action="" method="get">
     <!--Donnée de l'étape-->
     <input type="hidden" name="etape" value="<?php echo $etape;?>">
@@ -335,14 +386,14 @@ function ecrireSelected($valeurOption, $nomSelection){
 <h2><?php echo $strEnteteH2; ?></h2>
 
     <?php if($etape == 1) { ?>
-        <label for="titre">Titre :</label><br>
-        <input type="text" id="titre" name="titre" value="<?php if(isset($_GET['titre'])){ echo $_GET['titre'];}?>" onchange="functiontitre()">
-        <a href="#" class="fa-solid fa-dice-three fa-2x" id="randomTitleButton"></a>
+        <label for="titre">Titre</label><br>
+        <input type="text" id="titre" name="titre" value="<?php echo $strTitre; ?>" onchange="functionTitre()">
+        <a href="#" class="fa-solid fa-dice-three fa-2xl" id="randomTitleButton"></a>
         <br><span><?php echo $arrMessagesErreur; ?></span>
         <br>
     <br>
     <fieldset>
-        <legend>Durée :</legend>
+        <legend>Durée</legend>
         <?php for($cpt=0;$cpt<count($arrDuree);$cpt++){ ?>
             <label>
                 <input type="radio" name="id_duree" id="<?php echo $arrDuree[$cpt]['duree'];?>" value="<?php echo $arrDuree[$cpt]['id_duree'] ?>" onchange="functionDuree()" <?php echo ecrireChecked($arrDuree[$cpt]['id_duree'], 'duree')?>>
@@ -351,7 +402,7 @@ function ecrireSelected($valeurOption, $nomSelection){
         <?php } ?>
     </fieldset>
     <fieldset>
-        <legend>Classification :</legend>
+        <legend>Classification</legend>
             <?php for($cpt=0;$cpt<count($arrClassification);$cpt++){ ?>
             <label style="color: <?php echo $arrClassification[$cpt]['hexadecimal'];?>">
                 <input type="radio" name="id_classification" id="<?php echo $arrClassification[$cpt]['type'];?>" value="<?php echo $arrClassification[$cpt]['id_classification'];?>" onchange="functionClassification()"
@@ -361,59 +412,71 @@ function ecrireSelected($valeurOption, $nomSelection){
             <?php } ?>
     </fieldset>
     <?php } ?>
+    <!--  Étape 2  -->
     <?php if($etape == 2 ) { ?>
-        <label for="titre">Franchise :</label><br>
-        <input type="text" id="franchise" name="franchise" value="<?php if(isset($_GET['franchise'])){ echo $_GET['franchise'];}?>">
+        <label for="franchise">Franchise</label><br>
+        <input type="text" id="franchise" name="franchise" value="<?php echo $strFranchise; ?>">
         <br>
         <p>Ou</p>
-        <h2><a href="#"><?php echo $strH2; ?></a></h2>
+<!--        <h2><a href="#" id="overlay-link">--><?php //echo $strH2; ?><!--</a></h2>-->
+
+        <a href="#" id="overlay-link"><?php echo $strH2; ?></a>
+        <div id="overlay">
+            <div id="overlay-content">
+                <p>Contenu de l'overlay</p>
+                <button id="overlay-close">Fermer</button>
+            </div>
+        </div>
+
+
         <br>
     <?php } ?>
+    <!--  Étape 3  -->
     <?php if($etape == 3 ) { ?>
         <div>
-            <label for="id_genre">Principal :</label>
-            <select id="id_genre" name="id_genre_principal" onchange="myFunction()">
+            <label for="id_genre_principal">Principal</label><br>
+            <select id="id_genre_principal" name="id_genre_principal" onchange="functionGenre()">
                     <option value="0">Choisir un genre</option>
                <?php for($cpt=0;$cpt<count($arrGenre);$cpt++){ ?>
-                    <option value="<?php echo $arrGenre[$cpt]['nom'];?>">
+                    <option value="<?php echo $arrGenre[$cpt]['id_genre'];?>" <?php echo ecrireSelected($arrGenre[$cpt]["id_genre"], 'genre_principal');  ?>>
                         <?php echo $arrGenre[$cpt]['nom']; ?></option>
                 <?php } ?>
             </select>
         </div>
         <br>
-        <div>
-            <label for="id_genre">Sous-Genre :</label>
-            <select id="id_genre" name="id_genre_sous">
-                <option value="0">Choisir un genre</option>
-                <?php for($cpt=0;$cpt<count($arrGenre);$cpt++){ ?>
-                    <option value="<?php echo $arrGenre[$cpt]['nom'];?>">
-                        <?php echo $arrGenre[$cpt]['nom']?></option>
-                <?php } ?>
-            </select>
-        </div>
-        <br>
-        <div>
-            <label for="id_genre">Sous-Genre :</label>
-            <select id="id_genre" name="id_genre_sous_deux">
-                <option value="0">Choisir un genre</option>
-                <?php for($cpt=0;$cpt<count($arrGenre);$cpt++){ ?>
-                    <option value="<?php echo $arrGenre[$cpt]['nom'];?>">
-                        <?php echo $arrGenre[$cpt]['nom']?></option>
-                <?php } ?>
-            </select>
-        </div>
+<!--        <div>-->
+<!--            <label for="id_genre">Sous-Genre :</label>-->
+<!--            <select id="id_genre" name="id_genre_sous">-->
+<!--                <option value="0">Choisir un genre</option>-->
+<!--                --><?php //for($cpt=0;$cpt<count($arrGenre);$cpt++){ ?>
+<!--                    <option value="--><?php //echo $arrGenre[$cpt]['id_genre'];?><!--">-->
+<!--                        --><?php //echo $arrGenre[$cpt]['nom']?><!--</option>-->
+<!--                --><?php //} ?>
+<!--            </select>-->
+<!--        </div>-->
+<!--        <br>-->
+<!--        <div>-->
+<!--            <label for="id_genre">Sous-Genre :</label>-->
+<!--            <select id="id_genre" name="id_genre_sous_deux">-->
+<!--                <option value="0">Choisir un genre</option>-->
+<!--                --><?php //for($cpt=0;$cpt<count($arrGenre);$cpt++){ ?>
+<!--                    <option value="--><?php //echo $arrGenre[$cpt]['id_genre'];?><!--">-->
+<!--                        --><?php //echo $arrGenre[$cpt]['nom']?><!--</option>-->
+<!--                --><?php //} ?>
+<!--            </select>-->
+<!--        </div>-->
         <br>
         <h2><?php echo $strH2; ?></h2>
         <br>
         <div>
-            <label for="id_genre">Principal :</label>
-            <select id="id_genre" name="id_genre">
+            <label for="id_acteur_principal">Principal :</label>
+            <select id="id_acteur_principal" name="id_acteur_principal">
                 <option value="1">1</option>
             </select>
         </div>
         <div>
-            <label for="id_genre">Secondaire :</label>
-            <select id="id_genre" name="id_genre">
+            <label for="id_acteur_secondaire">Secondaire :</label>
+            <select id="id_acteur_secondaire" name="id_acteur_secondaire">
                 <option value="1">0</option>
             </select>
         </div>
@@ -464,43 +527,52 @@ function ecrireSelected($valeurOption, $nomSelection){
         <input type="submit" name="suivant" value="Suivant">
     <?php endif; ?>
 </form>
-<!--<div id="couleur_principal" style="background-color: --><?php //echo $arrBackgroundWhere[0]['hexadecimal']; ?><!--">-->
-<!--    <p id="couleur_textes" style="color: --><?php //echo $arrTextesWhere[0]['hexadecimal']; ?><!--">PPP</p>-->
-<!--    <i id="couleur_graphique" class="fa-regular fa-compass"></i>-->
-<!--</div>-->
-
 <section class="affiche">
     <div class="affiche__background" id="couleur_principal" style="background-color: <?php echo $arrBackgroundWhere[0]['hexadecimal']; ?>">
         <div class="affiche__texte" id="couleur_textes" style="color: <?php echo $arrTextesWhere[0]['hexadecimal']; ?>">
             <p>Future Nomination</p>
             <div class="affiche__ligne"></div>
-            <i class="fa-solid fa-4x" id="couleur_graphique" style="color: <?php echo $arrGraphiqueWhere[0]['hexadecimal']; ?>"></i>
+            <i class="fa-solid fa-4x <?php echo $arrGenreWhere[0]['icone']; ?>" id="couleur_graphique" style="color: <?php echo $arrGraphiqueWhere[0]['hexadecimal']; ?>"></i>
             <p id="titre_du_film"><?php if(isset($_GET['titre'])){ echo $_GET['titre'];} else { echo 'Titre du film'; }?></p>
             <p id="type_classification-deux" style="color: <?php echo $arrClassificationWhere[0]['hexadecimal'];?>"><?php echo $arrClassificationWhere[0]['type']?></p>
         </div>
     </div>
     <div>
         <table>
-            <?php if($strCodeOperation!="nouveau") { ?>
+            <?php if($strCodeOperation=="nouveau" || $etape == 1) { ?>
             <tr>
-                <th align="right">Titre :</th>
-                <td id="titre_2" align="left"><?php if(isset($_GET['titre'])){ echo $_GET['titre'];} ?></td>
+                <th style="text-align: end">Titre :</th>
+                <td class="fa-fade" id="titre_2" style="text-align: start"><?php if(isset($_GET['titre'])){ echo $_GET['titre'];} ?></td>
             </tr>
             <tr>
-                <th align="right">Durée :</th>
-                <td id="film_duree" align="left"><?php echo $arrDureeWhere[0]['duree']; ?></td>
+                <th style="text-align: end">Durée :</th>
+                <td class="fa-fade" id="film_duree" style="text-align: start"><?php echo $arrDureeWhere[0]['duree']; ?></td>
             </tr>
             <tr>
-                <th align="right">Classification :</th>
-                <td id="type_classification" style="color: <?php echo $arrClassificationWhere[0]['hexadecimal'];?>" align="left"><?php echo $arrClassificationWhere[0]['type']; ?></td>
+                <th style="text-align: end">Classification :</th>
+                <td class="fa-fade" id="type_classification" style="text-align: start; color: <?php echo $arrClassificationWhere[0]['hexadecimal'];?>"><?php echo $arrClassificationWhere[0]['type']; ?></td>
+            </tr>
+            <?php } ?>
+            <?php if($strCodeOperation!="nouveau" && $etape != 1) { ?>
+            <tr>
+                <th style="text-align: end">Titre :</th>
+                <td id="titre_2" style="text-align: start"><?php if(isset($_GET['titre'])){ echo $_GET['titre'];} ?></td>
+            </tr>
+            <tr>
+                <th style="text-align: end">Durée :</th>
+                <td id="film_duree" style="text-align: start"><?php echo $arrDureeWhere[0]['duree']; ?></td>
+            </tr>
+            <tr>
+                <th style="text-align: end">Classification :</th>
+                <td id="type_classification" style="text-align: start; color: <?php echo $arrClassificationWhere[0]['hexadecimal'];?>"><?php echo $arrClassificationWhere[0]['type']; ?></td>
             </tr>
             <?php if ($etape == 3 || $etape == 4) { ?>
                     <tr>
-                        <th align="right">Franchise :</th>
-                        <td align="left"><?php if(isset($_GET['id_duree'])){ echo $_GET['id_duree'];} ?></td>
+                        <th style="text-align: end">Franchise :</th>
+                        <td style="text-align: start"><?php if(isset($_GET['id_duree'])){ echo $_GET['id_duree'];} ?></td>
                     </tr>
                 <?php } ?>
-            <?php } var_dump($etape); ?>
+            <?php } ?>
         </table>
     </div>
 </section>
@@ -518,58 +590,94 @@ function ecrireSelected($valeurOption, $nomSelection){
 </body>
 </html>
 
-    <p class="fa-solid fa-4x" id="demo"></p>
-
 <script>
-    function myFunction() {
-        var mylist = document.getElementById("id_genre");
+
+
+
+
+    function functionTitre() {
+        let strTitre = document.getElementById("titre").value;
+
+        // Vérifie si la chaîne commence par une lettre majuscule
+        strTitre = strTitre.charAt(0).toUpperCase() + strTitre.slice(1);
+
+        // Enlève les caractères spéciaux de la chaîne
+        strTitre = strTitre.replace(/[^a-zA-Z0-9 :-ÀÁÆÇÈÉÊÙÚÛàáæçèéêëùúû]/g, "");
+
+        // Vérifie si la chaîne contient au moins 3 lettres
+        if (!/[a-zA-Z]{3,}/.test(strTitre)) {
+            alert("Le titre doit contenir au moins 3 lettres");
+        }
+        else {
+            // Met à jour l'input avec la chaîne formatée
+            document.getElementById("titre").value = strTitre;
+            document.getElementById("titre_du_film").innerHTML = strTitre;
+            document.getElementById("titre_2").innerHTML = strTitre;
+        }
+    }
+
+    document.getElementById("randomTitleButton").addEventListener("click", function functionTitre() {
+
+        // Génère un nombre au hasard entre 0 et la longueur du tableau filmTitles
+        const filmTitles = ["Eternal Sunshine", "Vol au-dessus d'un nid de coucou", "Requiem for a Dream", "De battre mon cœur s'est arrêté", "Le Tombeau des lucioles", "Les Contes de la lune vague après la pluie", "Le Cercle des poètes disparus", "Une vie de bestiole", "16 rues", "Encore 17 ans", "24 heures avant nuit", "13 ans, bientôt 30", "Gone in 60 Seconds", "Edge, The"];
+        const randomIndex = Math.floor(Math.random() * filmTitles.length);
+
+        // Récupère le titre de film au hasard à partir de l'index aléatoire
+        const randomTitle = filmTitles[randomIndex];
+
+        // Met à jour l'input de titre avec le titre de film au hasard
+        document.getElementById("titre").value = randomTitle;
+        document.getElementById("titre_du_film").innerHTML = randomTitle;
+        document.getElementById("titre_2").innerHTML = randomTitle;
+    });
+
+
+    function functionGenre() {
+        let mylist = document.getElementById("id_genre_principal");
         document.getElementById("couleur_graphique").value = mylist.options[mylist.selectedIndex].text;
 
         // Get the selected value
-        var selectedValue = mylist.options[mylist.selectedIndex].value;
+        let selectedValue = mylist.options[mylist.selectedIndex].value;
 
         // Remove the class before adding the new one
-        var elements = document.getElementsByClassName("fa-solid fa-4x");
-        var classes = ["fa-gun", "fa-compass", "fa-user", "fa-masks-theater", "fa-handcuffs","fa-crystal-ball", "fa-landmark", "fa-island-tropical", "fa-knife-kitchen", "fa-alien", "fa-music", "fa-heart", "fa-ufo", "fa-medal", "fa-user-secret", "fa-bat", "fa-hat-cowboy", "fa-face-disappointed", "fa-telescope"];
-        for (var i = 0; i < elements.length; i++) {
+        let elements = document.getElementsByClassName("fa-solid fa-4x");
+        let classes = ["fa-explosion", "fa-gun", "fa-signs-post", "fa-user", "fa-mask", "fa-masks-theater", "fa-binoculars", "fa-handcuffs", "fa-hat-wizard", "fa-magnifying-glass-location", "fa-cloud-showers-heavy", "fa-landmark", "fa-candy-cane", "fa-ghost", "fa-mosquito", "fa-music", "fa-heart", "fa-robot", "fa-medal", "fa-user-secret", "fa-bat", "fa-hat-cowboy", "fa-face-disappointed", "fa-skull"];
+        for (let i = 0; i < elements.length; i++) {
             elements[i].classList.remove(...classes);
         }
-
         // Add the class according to the selected value
-        var classMap = {
-            "Action": "fa-gun",
-            "Aventure": "fa-compass",
-            "Biographique": "fa-user",
-            "Comédie": "fa-masks-theater",
-            "Crime": "fa-handcuffs",
-            "Fantastic": "fa-crystal-ball",
-            "Historic": "fa-landmark",
-            "Vacances": "fa-island-tropical",
-            "Horreur": "fa-knife-kitchen",
-            "Monstre": "fa-alien",
-            "Musical": "fa-music",
-            "Romance": "fa-heart",
-            "Scifi": "fa-ufo",
-            "Sport": "fa-medal",
-            "Espionage": "fa-user-secret",
-            "Super-héros": "fa-bat",
-            "Western": "fa-hat-cowboy",
-            "Drame": "fa-face-disappointed",
-            "Mistère": "fa-telescope"
+        let classMap = {
+            "1": "fa-explosion",
+            "2": "fa-signs-post",
+            "3": "fa-user",
+            "4": "fa-masks-theater",
+            "5": "fa-handcuffs",
+            "6": "fa-cloud-showers-heavy",
+            "7": "fa-hat-wizard",
+            "8": "fa-landmark",
+            "9": "fa-candy-cane",
+            "10": "fa-ghost",
+            "11": "fa-mosquito",
+            "12": "fa-music",
+            "13": "fa-magnifying-glass-location",
+            "14": "fa-user-secret",
+            "15": "fa-heart",
+            "16": "fa-robot",
+            "17": "fa-medal",
+            "18": "fa-binoculars",
+            "19": "fa-mask",
+            "20": "fa-skull",
+            "21": "fa-hat-cowboy"
         }
-        var classToAdd = classMap[selectedValue];
+        let classToAdd = classMap[selectedValue];
         if (classToAdd) {
             document.getElementById("couleur_graphique").classList.add(classToAdd);
         }
     }
 
-
-</script>
-
-<script>
     function functionDuree() {
-        var radios = document.getElementsByName("id_duree");
-        for (var i = 0; i < radios.length; i++) {
+        let radios = document.getElementsByName("id_duree");
+        for (let i = 0; i < radios.length; i++) {
             if (radios[i].checked) {
                 document.getElementById("film_duree").innerHTML =
                     document.getElementById(radios[i].id).id;
@@ -578,8 +686,8 @@ function ecrireSelected($valeurOption, $nomSelection){
         }
     }
     function functionClassification() {
-        var radios = document.getElementsByName("id_classification");
-        for (var i = 0; i < radios.length; i++) {
+        let radios = document.getElementsByName("id_classification");
+        for (let i = 0; i < radios.length; i++) {
             if (radios[i].checked) {
                 document.getElementById("type_classification-deux").innerHTML =
                     document.getElementById(radios[i].id).id;
@@ -590,8 +698,8 @@ function ecrireSelected($valeurOption, $nomSelection){
         }
     }
     function functionCouleurPrincipal() {
-        var radios = document.getElementsByName("id_couleur_background");
-        for (var i = 0; i < radios.length; i++) {
+        let radios = document.getElementsByName("id_couleur_background");
+        for (let i = 0; i < radios.length; i++) {
             if (radios[i].checked) {
                 document.getElementById("couleur_principal").style.background =
                     document.getElementById(radios[i].id).id;
@@ -600,8 +708,8 @@ function ecrireSelected($valeurOption, $nomSelection){
         }
     }
     function functionCouleurTexte() {
-        var radios = document.getElementsByName("id_couleur_textes");
-        for (var i = 0; i < radios.length; i++) {
+        let radios = document.getElementsByName("id_couleur_textes");
+        for (let i = 0; i < radios.length; i++) {
             if (radios[i].checked) {
                 document.getElementById("couleur_textes").style.color =
                     document.getElementById(radios[i].id).id;
@@ -610,8 +718,8 @@ function ecrireSelected($valeurOption, $nomSelection){
         }
     }
     function functionCouleurGraphique() {
-        var radios = document.getElementsByName("id_couleur_graphique");
-        for (var i = 0; i < radios.length; i++) {
+        let radios = document.getElementsByName("id_couleur_graphique");
+        for (let i = 0; i < radios.length; i++) {
             if (radios[i].checked) {
                 document.getElementById("couleur_graphique").style.color =
                     document.getElementById(radios[i].id).id;
@@ -619,19 +727,4 @@ function ecrireSelected($valeurOption, $nomSelection){
             }
         }
     }
-
-
-</script>
-
-<?php
-//// Définir un tableau PHP
-//$array = array("Google Chrome", "Firefox", "Internet Explorer", "Safari", "Opera");
-//
-//// Encoder le tableau en JSON
-//$jsonArray = json_encode($array);
-//?>
-<!---->
-<!--<script>-->
-<!--    // Définir une variable JavaScript qui contient les données JSON-->
-<!--    const array = --><?php //echo $jsonArray; ?>
 </script>

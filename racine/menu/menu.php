@@ -17,17 +17,20 @@ include ($niveau. 'inc/scripts/config.inc.php');
 $strEnteteH1="BlockBuster";
 
 // Check if user is logged in
-if(!isset($_SESSION['id_utilisateur']) || empty($_SESSION['id_utilisateur'])) {
+if(empty($_SESSION['id_utilisateur'])) {
     header("Location: ../index.php");
     exit();
 }
 $strIdUtilisateur = $_SESSION['id_utilisateur'];
 
-$stmt = $pdoConnexion->prepare("SELECT * FROM t_utilisateur WHERE id_utilisateur=:id_utilisateur");
+$stmt = $pdoConnexion->prepare("SELECT * FROM t_utilisateur WHERE id_utilisateur=:id_utilisateur AND id_utilisateur = (SELECT id_studios FROM t_studios WHERE id_utilisateur NOT LIKE false)");
 
 $stmt->bindParam(':id_utilisateur', $strIdUtilisateur);
 $stmt->execute();
 $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+// Check if user has a studio
+$hasStudio = isset($user['id_utilisateur']) ? $user['id_utilisateur'] : false;
 
 // Logout
 if(isset($_GET['logout'])) {
@@ -49,6 +52,7 @@ if(isset($_GET['logout'])) {
     exit();
 }
 
+
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -65,13 +69,16 @@ if(isset($_GET['logout'])) {
 <body>
 <h1><?php echo $strEnteteH1;?></h1>
 <form action="nouveau/index.php" method="get">
+    <input type="hidden" name="etape" value="0">
     <div>
         <input type="submit" value="Nouveau jeu" name="btn_nouveau">
     </div>
 </form>
+<?php if ($hasStudio == true): ?>
     <div>
-       <a href="../jeux/index.php">Continuer jeu</a>
+        <a href="../jeux/index.php">Continuer jeu</a>
     </div>
+<?php endif; ?>
 <form action="" method="GET">
     <div>
         <input type="submit" value="Recharger sauvegarde" name="btn_recharger">

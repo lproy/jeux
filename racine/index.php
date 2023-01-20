@@ -185,18 +185,19 @@ if(isset($_POST['btn_connecter'])) {
 <body>
 <h1><?php echo $strEnteteH1;?></h1>
 
-<p><?php echo $strQuestion ?></p><a href="./sign_up.php">Créer un compte</a>
+<p><?php echo $strQuestion ?> <a href="./sign_up.php">Créer un compte</a></p>
 
 <p><?php echo $strMessage;?></p>
     <form method="post">
             <span><?php echo $erreurStatus; ?></span>
         <div>
-            <label for="nom_utilisateur">Nom d'usager</label>
+            <label for="nom_utilisateur">Nom d'usager</label><br>
             <input type="text" id="nom_utilisateur" name="nom_utilisateur" value="<?php echo $username ?>">
             <span><?php ?></span>
         </div>
+       <br>
         <div>
-            <label for="mot_de_passe">Mot de passe</label>
+            <label for="mot_de_passe">Mot de passe</label><br>
             <input type="password" id="mot_de_passe" name="mot_de_passe" value="<?php echo $password ?>">
             <span><?php ?></span>
         </div>

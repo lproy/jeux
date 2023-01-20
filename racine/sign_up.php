@@ -55,16 +55,16 @@ switch (true){
 // Check if form is submitted
 if(isset($_POST['submit'])) {
     // Get form data
-    $username = $_POST['username'];
-    $email = $_POST['email'];
-    $password = $_POST['password'];
+    $username = $_POST['nom_utilisateur'];
+    $email = $_POST['courriel'];
+    $password = $_POST['mot_de_passe'];
 
     // Validate form data
     if(empty($username) || empty($email) || empty($password)) {
-        $error = "All fields are required";
+        $error = "Tous les champs son demander";
     } else {
         // Hash password
-        $password = password_hash($password, PASSWORD_DEFAULT);
+//        $password = password_hash($password, PASSWORD_DEFAULT);
 
         // Check if email already exists
         $stmt = $pdoConnexion->prepare("SELECT * FROM t_utilisateur WHERE courriel=:courriel");
@@ -81,6 +81,17 @@ if(isset($_POST['submit'])) {
             $stmt->bindParam(':mot_de_passe', $password);
             $stmt->execute();
 
+            // Get the generated user ID
+            $id_utilisateur = $pdoConnexion->lastInsertId();
+
+            //start a session
+            session_start();
+
+            //store the user_id in session
+            $_SESSION['id_utilisateur'] = $id_utilisateur;
+
+            var_dump($_SESSION['id_utilisateur']);
+
             // Redirect to login page
             header("Location: menu/menu.php");
             exit();
@@ -91,22 +102,29 @@ if(isset($_POST['submit'])) {
 
 <html>
 <head>
-    <title>Sign Up</title>
+    <title>Création de compte</title>
 </head>
 <body>
-    <h1>Sign Up</h1>
-    <p><?php echo $strQuestion ?></p><a href="./index.php">Connectez-vous</a>
+    <h1>Création de compte</h1>
+    <p><?php echo $strQuestion ?> <a href="./index.php">Connectez-vous</a></p>
     <form method="post">
-        <label for="username">Username:</label>
-        <input type="text" name="username" id="username" value="<?php if(isset($username)) { echo $username; } ?>"><br>
-
-        <label for="email">Email:</label>
-        <input type="email" name="email" id="email"><br>
-
-        <label for="password">Password:</label>
-        <input type="password" name="password" id="password"><br>
-
-        <input type="submit" name="submit" value="Sign Up">
+        <input type="hidden" value="<?php if(isset($id_utilisateur)) { echo $id_utilisateur; } ?>">
+        <div>
+            <label for="nom_utilisateur">Nom d’usager</label><br>
+            <input type="text" name="nom_utilisateur" id="nom_utilisateur" value="<?php if(isset($username)) { echo $username; } ?>">
+        </div>
+        <br>
+        <div>
+            <label for="courriel">Courriel</label><br>
+            <input type="email" name="courriel" id="courriel" value="<?php if(isset($email)) { echo $email; } ?>">
+        </div>
+        <br>
+        <div>
+            <label for="mot_de_passe">Choisir un mot de passe</label><br>
+            <input type="password" name="mot_de_passe" id="mot_de_passe">
+        </div>
+        <br>
+        <input type="submit" name="submit" value="Créer un compte">
 
         <?php if(isset($error)) { echo "<p>$error</p>"; } ?>
     </form>
